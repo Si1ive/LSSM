@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from data.dataset import Dataset
 from loss.lovasz_loss import lovasz_softmax
 from loss.metrics import Metrics
-from net_v4 import ZZHnet
+from net_v5 import ZZHnet
 from tqdm import tqdm
 
 def model_init():
@@ -24,12 +24,12 @@ def model_init():
     print("Torchvision Version: ", torchvision.__version__)
     print('Device:', device)
     model = ZZHnet.zzh_net(num_class=2)
-    #model.load_state_dict(torch.load('/home/zzh/Result/ZZHNet/best_checkpoint_v4/best_statedict_epoch14_f_score0.8401.pth'), strict=True)
+    #model.load_state_dict(torch.load('/home/zzh/Result/ZZHNet/best_checkpoint_'+version+'/best_statedict_epoch14_f_score0.8401.pth'), strict=True)
     model = model.to(device)
     return model,device
 
 def data_init():
-    batch_size = 12
+    batch_size = 128
     img_size = 256
     train_pickle_file = '/home/zzh/remote_data/LEVIR-CD256/train'  # Path to training set
     val_pickle_file = '/home/zzh/remote_data/LEVIR-CD256/val'  # Path to validation set
@@ -66,6 +66,11 @@ def train(model, device, data_loader,num_epochs):
     train_loss = []
     base_lr = 1e-4
     best_F1 = 0
+    best_Pre = 0
+    best_Rec = 0
+    best_OA = 0
+    best_loss = 0
+    best_epoch =[0,0,0,0]
     #先来个预训练32残差跑边缘增强，跑通，看看得分,速度等等
     #再用武大的边缘增强单独跑，以及跟残差结合跑，对比结果变化，模型大小，速度变化等等
     #再结合异源
@@ -153,8 +158,20 @@ def train(model, device, data_loader,num_epochs):
         #记录一下得分的峰值
         if f_score > best_F1:
             best_F1 = f_score
-            best_checkpoint = '/home/zzh/Result/ZZHNet/best_checkpoint_v4/best_statedict_epoch{}_f_score{:.4f}.pth'.format(epoch+15, f_score)
+            best_checkpoint = '/home/zzh/Result/ZZHNet/best_checkpoint_'+version+'/best_statedict_epoch{}_f_score{:.4f}.pth'.format(epoch+15, f_score)
             torch.save(model.state_dict(), best_checkpoint)
+        if precision > best_Pre:
+            best_Pre = precision
+            best_epoch[0] = epoch+1
+        if recall > best_Rec:
+            best_Rec = recall
+            best_epoch[1] = epoch + 1
+        if oa > best_OA:
+            best_OA = oa
+            best_epoch[2] = epoch + 1
+        if (epoch_loss_seg < best_loss) or best_loss==0:
+            best_loss = epoch_loss_seg
+            best_epoch[3] = epoch + 1
         val_acc.append(f_score)
         print('Best f_score: {:4f}'.format(best_F1))
         print('-' * 60)
@@ -165,8 +182,9 @@ def train(model, device, data_loader,num_epochs):
 # def val(model, device, val_loader):
 
 if __name__ == '__main__':
-    num_epochs = 85
+    num_epochs = 100
     num_class = 2
+    version = 'v5'
     writer = SummaryWriter()
     model, device = model_init()
     data = data_init()
@@ -174,20 +192,20 @@ if __name__ == '__main__':
     writer.close()
     ##检验文件夹是否存在
     #训练损失，F1
-    if not os.path.exists("/home/zzh/Result/ZZHNet/train_v4"):
-        os.makedirs("/home/zzh/Result/ZZHNet/train_v4")
+    if not os.path.exists("/home/zzh/Result/ZZHNet/train_"+version):
+        os.makedirs("/home/zzh/Result/ZZHNet/train_"+version)
     #训练log
     if not os.path.exists("/home/zzh/Result/ZZHNet/logs"):
         os.makedirs("/home/zzh/Result/ZZHNet/logs")
     #训练权重
-    if not os.path.exists("/home/zzh/Result/ZZHNet/best_checkpoint_v4"):
-        os.makedirs("/home/zzh/Result/ZZHNet/best_checkpoint_v4")
+    if not os.path.exists("/home/zzh/Result/ZZHNet/best_checkpoint_"+version):
+        os.makedirs("/home/zzh/Result/ZZHNet/best_checkpoint_"+version)
     x = np.arange(0, num_epochs, 1)
     plt.figure()
     plt.plot(x, val_acc, 'r', label='val_f1')
-    plt.savefig('/home/zzh/Result/ZZHNet/train_v4/ZZHNet_Mamba_val_f_score.png')
+    plt.savefig('/home/zzh/Result/ZZHNet/train_'+version+'/ZZHNet_Mamba_val_f_score.png')
     plt.figure()
     plt.plot(x, train_loss, 'g', label='train_loss')
-    plt.savefig('/home/zzh/Result/ZZHNet/train_v4/ZZHNet_Mamba_train_loss.png')
+    plt.savefig('/home/zzh/Result/ZZHNet/train_'+version+'/ZZHNet_Mamba_train_loss.png')
 
 

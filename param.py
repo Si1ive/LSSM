@@ -1,7 +1,7 @@
 import torch
 
 from fvcore.nn import FlopCountAnalysis ,parameter_count_table
-from net_v3.ZZHnet import zzh_net
+from net_v5.ZZHnet import zzh_net
 from thop import profile, clever_format
 
 if __name__ == "__main__":
