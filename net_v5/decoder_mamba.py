@@ -24,10 +24,10 @@ class AFF(nn.Module):
     def __init__(self, dim):
         super(AFF, self).__init__()
         self.local_att1 = nn.Sequential(
-            nn.Conv2d(dim * 2, dim // 4, kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(dim * 2, dim // 4, kernel_size=1, stride=1, padding=0,bias=False),
             nn.BatchNorm2d(dim // 4),
             nn.SiLU(inplace=True),
-            nn.Conv2d(dim // 4, dim, kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(dim // 4, dim, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(dim),
         )
     def forward(self, x1, x2):

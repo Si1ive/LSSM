@@ -5,7 +5,8 @@ from net_v5.ZZHnet import zzh_net
 from thop import profile, clever_format
 
 if __name__ == "__main__":
-    model = zzh_net(num_class=2)
+    model = zzh_net(2,[64, 128, 256, 512])
+    print(model)
     model.cuda().train()
 
     A = torch.randn((1, 3, 256, 256)).cuda()

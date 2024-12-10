@@ -1,3 +1,4 @@
+import cv2
 import torch
 from torch import nn
 
@@ -9,18 +10,20 @@ from net_v5.laplace import DoG
 class zzh_net(nn.Module):
     def __init__(self, num_class, dims):
         super().__init__()
-        self.lap = DoG()
-        self.ABfuse = nn.Conv2d(6,1,kernel_size=1,stride=1,padding=0,bias=True)
+        self.Alap = DoG()
+        self.Blap = DoG()
         self.encoder=encoder(dims)
         self.decoder = decoder(dims, num_class)
-
         self.clf = nn.Conv2d(dims[0],2,1)
 
     def forward(self, A, B):
-        lap = self.lap(self.ABfuse(torch.cat((A,B),dim=1)))
+        A_gray = cv2.cvtColor(A, cv2.COLOR_BGR2GRAY)
+        B_gray = cv2.cvtColor(B, cv2.COLOR_BGR2GRAY)
+        A_lap = self.Alap(A_gray)
+        B_lap = self.Blap(B_gray)
         out = self.encoder(A,B)
         out1a, out1b, d1, out2a, out2b, d2, out3a, out3b, d3, out4a, out4b, d4 = out
-        img = self.decoder(lap, d1, d2, d3, d4, out1a, out1b, out2a, out2b, out3a, out3b, out4a, out4b)
+        img = self.decoder(torch.cat((A_lap,B_lap),dim=1), d1, d2, d3, d4, out1a, out1b, out2a, out2b, out3a, out3b, out4a, out4b)
         img = self.clf(img)
 
         return img
