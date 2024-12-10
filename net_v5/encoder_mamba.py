@@ -10,9 +10,9 @@ from models.vmamba2 import VSSM, LayerNorm2d
 #先把Vmamba爬过来
 
 class encoder(VSSM):
-    def __init__(self, out_indices=(0, 1, 2, 3), pretrained=None, norm_layer='ln2d',**kwargs):
+    def __init__(self, dims, out_indices=(0, 1, 2, 3), pretrained=None, norm_layer='ln2d',**kwargs):
         self.channel_first = (norm_layer.lower() in ["bn", "ln2d"])
-        kwargs.update(norm_layer=norm_layer,channel_first=self.channel_first)
+        kwargs.update(dims=dims, norm_layer=norm_layer,channel_first=self.channel_first)
         super().__init__(**kwargs)
 
         #也就是每个输出有自己独立的norm

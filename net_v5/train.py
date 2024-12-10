@@ -23,7 +23,7 @@ def model_init():
     print("PyTorch Version: ", torch.__version__)
     print("Torchvision Version: ", torchvision.__version__)
     print('Device:', device)
-    model = ZZHnet.zzh_net(num_class=2)
+    model = ZZHnet.zzh_net(num_class,dims)
     #model.load_state_dict(torch.load('/home/zzh/Result/ZZHNet/best_checkpoint_'+version+'/best_statedict_epoch14_f_score0.8401.pth'), strict=True)
     model = model.to(device)
     return model,device
@@ -178,13 +178,15 @@ def train(model, device, data_loader,num_epochs):
 if __name__ == '__main__':
     #超算跟笔记本之间切换要修改的参数:
     #batch,SuperTrain,dims,
-    batch_size = 128
+    batch_size = 12
     img_size = 256
     num_epochs = 100
     num_class = 2
+    #dims = [96, 192, 384, 768]
+    dims = [64, 128, 256, 512]
     version = 'v5'
     student_code = '1120241486'
-    SuperTrain = True
+    SuperTrain = False
     writer = SummaryWriter()
     model, device = model_init()
     writer.close()
