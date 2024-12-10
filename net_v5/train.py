@@ -17,7 +17,7 @@ from net_v5 import ZZHnet
 from tqdm import tqdm
 
 def model_init():
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
     print("PyTorch Version: ", torch.__version__)
@@ -28,11 +28,7 @@ def model_init():
     model = model.to(device)
     return model,device
 
-def data_init():
-    batch_size = 128
-    img_size = 256
-    train_pickle_file = '/home/zzh/remote_data/LEVIR-CD256/train'  # Path to training set
-    val_pickle_file = '/home/zzh/remote_data/LEVIR-CD256/val'  # Path to validation set
+def data_init(train_pickle_file,val_pickle_file):
     data_transforms = {
         'train': transforms.Compose([
             # 线性插值改变图片
@@ -158,7 +154,7 @@ def train(model, device, data_loader,num_epochs):
         #记录一下得分的峰值
         if f_score > best_F1:
             best_F1 = f_score
-            best_checkpoint = '/home/zzh/Result/ZZHNet/best_checkpoint_'+version+'/best_statedict_epoch{}_f_score{:.4f}.pth'.format(epoch+15, f_score)
+            best_checkpoint = best_checkpoint_pre+'/Result/ZZHNet/best_checkpoint_'+version+'/best_statedict_epoch{}_f_score{:.4f}.pth'.format(epoch, f_score)
             torch.save(model.state_dict(), best_checkpoint)
         if precision > best_Pre:
             best_Pre = precision
@@ -179,33 +175,60 @@ def train(model, device, data_loader,num_epochs):
     return val_acc, train_loss
 
 
-# def val(model, device, val_loader):
-
 if __name__ == '__main__':
+    #超算跟笔记本之间切换要修改的参数:
+    #batch,SuperTrain,dims,
+    batch_size = 128
+    img_size = 256
     num_epochs = 100
     num_class = 2
     version = 'v5'
+    student_code = '1120241486'
+    SuperTrain = True
     writer = SummaryWriter()
     model, device = model_init()
-    data = data_init()
-    val_acc, train_loss =train(model, device, data, num_epochs)
     writer.close()
     ##检验文件夹是否存在
     #训练损失，F1
-    if not os.path.exists("/home/zzh/Result/ZZHNet/train_"+version):
-        os.makedirs("/home/zzh/Result/ZZHNet/train_"+version)
-    #训练log
-    if not os.path.exists("/home/zzh/Result/ZZHNet/logs"):
-        os.makedirs("/home/zzh/Result/ZZHNet/logs")
-    #训练权重
-    if not os.path.exists("/home/zzh/Result/ZZHNet/best_checkpoint_"+version):
-        os.makedirs("/home/zzh/Result/ZZHNet/best_checkpoint_"+version)
-    x = np.arange(0, num_epochs, 1)
-    plt.figure()
-    plt.plot(x, val_acc, 'r', label='val_f1')
-    plt.savefig('/home/zzh/Result/ZZHNet/train_'+version+'/ZZHNet_Mamba_val_f_score.png')
-    plt.figure()
-    plt.plot(x, train_loss, 'g', label='train_loss')
-    plt.savefig('/home/zzh/Result/ZZHNet/train_'+version+'/ZZHNet_Mamba_train_loss.png')
+    if SuperTrain :
+        #初始化数据
+        data = data_init(train_pickle_file = '/home/'+student_code+'/LEVIR-CD256/train',val_pickle_file = '/home/'+student_code+'/LEVIR-CD256/val')
+        best_checkpoint_pre = '/home/'+student_code
+        if not os.path.exists("/home/" + student_code + "/Result/ZZHNet/train_" + version):
+            os.makedirs("/home/" + student_code + "/Result/ZZHNet/train_" + version)
+        # 训练log
+        if not os.path.exists("/home/" + student_code + "/Result/ZZHNet/logs"):
+            os.makedirs("/home/" + student_code + "/Result/ZZHNet/logs")
+        # 训练权重
+        if not os.path.exists("/home/" + student_code + "/Result/ZZHNet/best_checkpoint_" + version):
+            os.makedirs("/home/" + student_code + "/Result/ZZHNet/best_checkpoint_" + version)
+        x = np.arange(0, num_epochs, 1)
+        val_acc, train_loss = train(model, device, data, num_epochs)
+        plt.figure()
+        plt.plot(x, val_acc, 'r', label='val_f1')
+        plt.savefig('/home/' + student_code + '/Result/ZZHNet/train_' + version + '/ZZHNet_Mamba_val_f_score.png')
+        plt.figure()
+        plt.plot(x, train_loss, 'g', label='train_loss')
+        plt.savefig('/home/' + student_code + '/Result/ZZHNet/train_' + version + '/ZZHNet_Mamba_train_loss.png')
+    else:
+        # 初始化数据
+        data = data_init(train_pickle_file = '/home/zzh/remote_data/LEVIR-CD256/train',val_pickle_file = '/home/zzh/remote_data/LEVIR-CD256/val')
+        best_checkpoint_pre = '/home/zzh'
+        if not os.path.exists("/home/zzh/Result/ZZHNet/train_"+version):
+            os.makedirs("/home/zzh/Result/ZZHNet/train_"+version)
+        #训练log
+        if not os.path.exists("/home/zzh/Result/ZZHNet/logs"):
+            os.makedirs("/home/zzh/Result/ZZHNet/logs")
+        #训练权重
+        if not os.path.exists("/home/zzh/Result/ZZHNet/best_checkpoint_"+version):
+            os.makedirs("/home/zzh/Result/ZZHNet/best_checkpoint_"+version)
+        x = np.arange(0, num_epochs, 1)
+        val_acc, train_loss = train(model, device, data, num_epochs)
+        plt.figure()
+        plt.plot(x, val_acc, 'r', label='val_f1')
+        plt.savefig('/home/zzh/Result/ZZHNet/train_'+version+'/ZZHNet_Mamba_val_f_score.png')
+        plt.figure()
+        plt.plot(x, train_loss, 'g', label='train_loss')
+        plt.savefig('/home/zzh/Result/ZZHNet/train_'+version+'/ZZHNet_Mamba_train_loss.png')
 
 
