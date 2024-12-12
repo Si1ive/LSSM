@@ -10,5 +10,7 @@ yacs
 termcolor
 submitit 
 tensorboardX
+tensorboard
 fvcore
 seaborn
+opencv-python

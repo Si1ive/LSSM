@@ -5,7 +5,8 @@ from net_v5.ZZHnet import zzh_net
 from thop import profile, clever_format
 
 if __name__ == "__main__":
-    model = zzh_net(2,[64, 128, 256, 512])
+    model = zzh_net(2,[96, 192, 384, 768])
+    #model = zzh_net()
     print(model)
     model.cuda().train()
 

@@ -109,6 +109,7 @@ class edge_block(nn.Module):
         Di = Di * AB_VSS
         # 执行laplace之前要先转换成灰度图
         ABfuse = self.DoG(self.gray_conv(ABfuse)) * AB_VSS
+        Laplace = Laplace.repeat(1,AB_VSS.shape[1]//2,1,1)
         Laplace= Laplace * AB_VSS
         c = self.fuse(torch.cat((Di, ABfuse,Laplace), dim=1))
         c = self.vssb2(c)
