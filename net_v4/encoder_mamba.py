@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from models.vmamba2 import VSSM, LayerNorm2d
+from net_v4.models.vmamba2 import VSSM, LayerNorm2d
 
 #进入编码层第一件干什么事
 #参照MambaCD

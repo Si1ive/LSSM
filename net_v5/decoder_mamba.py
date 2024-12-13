@@ -6,7 +6,7 @@ from torch import nn
 
 import torch.nn.functional as F
 
-from models.vmamba2 import LayerNorm2d, VSSBlock
+from net_v5.models.vmamba2 import LayerNorm2d, VSSBlock
 from net_v5.laplace import DoG
 
 class conv_small(nn.Module):

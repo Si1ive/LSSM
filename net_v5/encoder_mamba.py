@@ -3,7 +3,7 @@ sys.path.append('/mnt/nfs/data/home/1120241486/ZZHNet/')
 
 import torch
 from torch import nn
-from models.vmamba2 import VSSM, LayerNorm2d
+from net_v5.models.vmamba2 import VSSM, LayerNorm2d
 
 #进入编码层第一件干什么事
 #参照MambaCD

@@ -191,7 +191,7 @@ if __name__ == '__main__':
     #dims = [96, 192, 384, 768]
     dims = [64, 128, 256, 512]
     version = 'v5'
-    SuperTrain = True
+    SuperTrain = False
     writer = SummaryWriter()
     model, device = model_init()
     writer.close()
