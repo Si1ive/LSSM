@@ -10,10 +10,7 @@ import torch.nn.functional as F
 
 from data.dataset import Dataset
 from loss import Focal_loss
-from loss import WBCE_loss
-from loss import Focal_loss
 from loss.metrics import Metrics
-from loss.WBCE_metrics import SegEvaluator
 from net_v1 import ZZHnet
 from tqdm import tqdm
 

@@ -1,5 +1,5 @@
 "# -- coding: UTF-8 --"
-CODE = '1120241486'
+CODE = '1120241485'
 import sys
 sys.path.append('/mnt/nfs/data/home/'+CODE+'/ZZHNet/')
 
@@ -183,7 +183,7 @@ def train(model, device, data_loader, num_epochs):
 if __name__ == '__main__':
     # 超算跟笔记本之间切换要修改的参数:
     # batch,SuperTrain,dims,
-    batch_size = 128
+    batch_size = 12
     img_size = 256
     num_epochs = 100
     num_class = 2

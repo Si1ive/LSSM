@@ -1,5 +1,6 @@
+CODE = '1120241485'
 import sys
-sys.path.append('/mnt/nfs/data/home/1120241486/ZZHNet/')
+sys.path.append('/mnt/nfs/data/home/'+CODE+'/ZZHNet/')
 
 #!/usr/bin/env python
 # coding: utf-8
