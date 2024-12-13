@@ -1,4 +1,7 @@
 "# -- coding: UTF-8 --"
+CODE = '1120241486'
+import sys
+sys.path.append('/mnt/nfs/data/home/'+CODE+'/ZZHNet/')
 import os
 
 import numpy as np
@@ -188,8 +191,7 @@ if __name__ == '__main__':
     #dims = [96, 192, 384, 768]
     dims = [64, 128, 256, 512]
     version = 'v5'
-    student_code = '1120241486'
-    SuperTrain = False
+    SuperTrain = True
     writer = SummaryWriter()
     model, device = model_init()
     writer.close()
@@ -197,25 +199,27 @@ if __name__ == '__main__':
     # 训练损失，F1
     if SuperTrain:
         # 初始化数据
-        data = data_init(train_pickle_file='/home/' + student_code + '/LEVIR-CD256/train',
-                         val_pickle_file='/home/' + student_code + '/LEVIR-CD256/val')
-        best_checkpoint_pre = '/home/' + student_code
-        if not os.path.exists("/home/" + student_code + "/Result/ZZHNet/train_" + version):
-            os.makedirs("/home/" + student_code + "/Result/ZZHNet/train_" + version)
+        data = data_init(train_pickle_file='/mnt/nfs/data/home/' + CODE + '/LEVIR-CD256/train',
+                         val_pickle_file='/mnt/nfs/data/home/' + CODE + '/LEVIR-CD256/val')
+        best_checkpoint_pre = '/mnt/nfs/data/home/' + CODE
+        # print(os.path.exists("/mnt/nfs/data/home/1120241486/Result/ZZHNet/train_v5"))
+        # os.makedirs("/mnt/nfs/data/home/1120241486/Result/ZZHNet/train_v5")
+        if not os.path.exists("/mnt/nfs/data/home/" + CODE + "/Result/ZZHNet/train_" + version):
+            os.makedirs("/mnt/nfs/data/home/" + CODE + "/Result/ZZHNet/train_" + version)
         # 训练log
-        if not os.path.exists("/home/" + student_code + "/Result/ZZHNet/logs"):
-            os.makedirs("/home/" + student_code + "/Result/ZZHNet/logs")
+        if not os.path.exists("/mnt/nfs/data/home/" + CODE + "/Result/ZZHNet/logs"):
+            os.makedirs("/mnt/nfs/data/home/" + CODE + "/Result/ZZHNet/logs")
         # 训练权重
-        if not os.path.exists("/home/" + student_code + "/Result/ZZHNet/best_checkpoint_" + version):
-            os.makedirs("/home/" + student_code + "/Result/ZZHNet/best_checkpoint_" + version)
+        if not os.path.exists("/mnt/nfs/data/home/" + CODE + "/Result/ZZHNet/best_checkpoint_" + version):
+            os.makedirs("/mnt/nfs/data/home/" + CODE + "/Result/ZZHNet/best_checkpoint_" + version)
         x = np.arange(0, num_epochs, 1)
         val_acc, train_loss = train(model, device, data, num_epochs)
         plt.figure()
         plt.plot(x, val_acc, 'r', label='val_f1')
-        plt.savefig('/home/' + student_code + '/Result/ZZHNet/train_' + version + '/ZZHNet_Mamba_val_f_score.png')
+        plt.savefig('/mnt/nfs/data/home/' + CODE + '/Result/ZZHNet/train_' + version + '/ZZHNet_Mamba_val_f_score.png')
         plt.figure()
         plt.plot(x, train_loss, 'g', label='train_loss')
-        plt.savefig('/home/' + student_code + '/Result/ZZHNet/train_' + version + '/ZZHNet_Mamba_train_loss.png')
+        plt.savefig('/mnt/nfs/data/home/' + CODE + '/Result/ZZHNet/train_' + version + '/ZZHNet_Mamba_train_loss.png')
     else:
         # 初始化数据
         data = data_init(train_pickle_file='/home/zzh/remote_data/LEVIR-CD256/train',

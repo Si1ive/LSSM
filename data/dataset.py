@@ -1,4 +1,7 @@
 "# -- coding: UTF-8 --"
+import sys
+sys.path.append('/mnt/nfs/data/home/1120241486/ZZHNet/')
+
 from torch.utils.data import Dataset
 import torchvision
 from data import helper_augmentations

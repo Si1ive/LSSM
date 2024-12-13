@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/mnt/nfs/data/home/1120241486/ZZHNet/')
+
 import cv2
 import torch
 from torch import nn

@@ -1,7 +1,8 @@
 #!/bin/bash
 #SBATCH -p gpu1
 #SBATCH --gpus=1
-hostname
+
+1120241486
 module load anaconda/anaconda3-2022.10
 module load cuda/11.8.0
 

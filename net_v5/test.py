@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/mnt/nfs/data/home/1120241486/ZZHNet/')
+
 #!/usr/bin/env python
 # coding: utf-8
 
