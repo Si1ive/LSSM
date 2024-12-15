@@ -1,4 +1,4 @@
-CODE = '1120241485'
+CODE = '1120241577'
 import sys
 sys.path.append('/mnt/nfs/data/home/'+CODE+'/ZZHNet/')
 

@@ -1,5 +1,5 @@
 "# -- coding: UTF-8 --"
-CODE = '1120241485'
+CODE = '1120241577'
 import sys
 sys.path.append('/mnt/nfs/data/home/'+CODE+'/ZZHNet/')
 
@@ -64,7 +64,7 @@ def data_init(train_pickle_file, val_pickle_file):
 def train(model, device, data_loader, num_epochs):
     val_acc = []
     train_loss = []
-    base_lr = 1e-4
+    base_lr = 0.00107
     best_F1 = 0
     best_Pre = 0
     best_Rec = 0
@@ -183,14 +183,14 @@ def train(model, device, data_loader, num_epochs):
 if __name__ == '__main__':
     # 超算跟笔记本之间切换要修改的参数:
     # batch,SuperTrain,dims,
-    batch_size = 12
+    batch_size = 128
     img_size = 256
     num_epochs = 100
     num_class = 2
     #dims = [96, 192, 384, 768]
     dims = [64, 128, 256, 512]
     version = 'v6'
-    SuperTrain = False
+    SuperTrain = True
     writer = SummaryWriter()
     model, device = model_init()
     writer.close()
