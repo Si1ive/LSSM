@@ -66,11 +66,6 @@ def train(model, device, data_loader, num_epochs):
     train_loss = []
     base_lr = 0.00107
     best_F1 = 0
-    best_Pre = 0
-    best_Rec = 0
-    best_OA = 0
-    best_loss = 0
-    best_epoch = [0, 0, 0, 0]
     # 先来个预训练32残差跑边缘增强，跑通，看看得分,速度等等
     # 再用武大的边缘增强单独跑，以及跟残差结合跑，对比结果变化，模型大小，速度变化等等
     # 再结合异源
@@ -161,36 +156,29 @@ def train(model, device, data_loader, num_epochs):
             best_checkpoint = best_checkpoint_pre + '/Result/ZZHNet/best_checkpoint_' + version + '/best_statedict_epoch{}_f_score{:.4f}.pth'.format(
                 epoch, f_score)
             torch.save(model.state_dict(), best_checkpoint)
-        if precision > best_Pre:
-            best_Pre = precision
-            best_epoch[0] = epoch + 1
-        if recall > best_Rec:
-            best_Rec = recall
-            best_epoch[1] = epoch + 1
-        if oa > best_OA:
-            best_OA = oa
-            best_epoch[2] = epoch + 1
-        if (epoch_loss_seg < best_loss) or best_loss == 0:
-            best_loss = epoch_loss_seg
-            best_epoch[3] = epoch + 1
         val_acc.append(f_score)
         print('Best f_score: {:4f}'.format(best_F1))
         print('-' * 60)
-
+        # 保存一下最后一轮权重
+        if epoch+1 == 100 :
+            final_checkpoint = best_checkpoint_pre + '/Result/ZZHNet/best_checkpoint_' + version + '/final_statedict_epoch{}_f_score{:.4f}.pth'.format(
+                epoch+1, f_score)
+            torch.save(model.state_dict(), final_checkpoint)
+            print('final f_score: {:4f}'.format(f_score))
     return val_acc, train_loss
 
 
 if __name__ == '__main__':
     # 超算跟笔记本之间切换要修改的参数:
     # batch,SuperTrain,dims,
-    batch_size = 128
+    batch_size = 12
     img_size = 256
     num_epochs = 100
     num_class = 2
     #dims = [96, 192, 384, 768]
     dims = [64, 128, 256, 512]
     version = 'v6'
-    SuperTrain = True
+    SuperTrain = False
     writer = SummaryWriter()
     model, device = model_init()
     writer.close()

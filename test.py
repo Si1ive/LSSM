@@ -14,7 +14,7 @@ import cv2
 
 from logsetting import get_log
 from loss.metrics import Metrics
-from net_v3 import ZZHnet
+from net_v5 import ZZHnet
 
 device = 'cuda'
 path = './dataset'
@@ -23,8 +23,8 @@ def model_init():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
-    model = ZZHnet.zzh_net()
-    model.load_state_dict(torch.load('/home/zzh/ZZHNet/result/best_checkpoint_' +name+ '/best_statedict_epoch49_f_score0.8515.pth'), strict=True)
+    model = ZZHnet.zzh_net(num_classes,dims)
+    model.load_state_dict(torch.load('/home/zzh/Result/ZZHNet/best_checkpoint_' +name+ '/best_statedict_epoch82_f_score0.8968.pth'), strict=True)
     model = model.to(device)
     model.eval()
     return model,device
@@ -61,7 +61,7 @@ def test(num_classes, net, files, device,img_size):
             preds[preds == 1] = 255
             preds = preds.cpu().numpy()
             basename = os.path.basename(masks_path[i])
-            cv2.imwrite('/home/zzh/ZZHNet/result/test_' +name+img+ '/' + 'pre_' + basename, preds)
+            cv2.imwrite('/home/zzh/Result/ZZHNet/test_' +name+img+ '/' + 'pre_' + basename, preds)
 
             for mask, output in zip(masks, out):
                 metrics.add(mask, output)
@@ -79,12 +79,13 @@ def test(num_classes, net, files, device,img_size):
 if __name__ == '__main__':
     num_classes = 2
     img_size = 1024
-    name = "v1"
+    name = "v5"
     img = '_1024'
+    dims = [64, 128, 256, 512]
     ##加载模型
     model, device = model_init()
 
-    logger = get_log("/home/zzh/ZZHNet/result/logs/" + str(datetime.date.today()) + 'test_log' +name+img+ '.txt')
+    logger = get_log("/home/zzh/Result/ZZHNet/logs/" + str(datetime.date.today()) + 'test_log' +name+img+ '.txt')
     test_datapath = '/home/zzh/remote_data/LEVIR-CD/test'
     test_hist = test(num_classes, model, test_datapath, device, img_size)
     logger.info(('precision={}'.format(test_hist["precision"]),

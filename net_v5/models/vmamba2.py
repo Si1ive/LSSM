@@ -781,7 +781,7 @@ class VSSBlock2(nn.Module):
         mlp_hidden_dim = int(hidden_dim * mlp_ratio)
         self.Amlp = Mlp(in_features=hidden_dim, hidden_features=mlp_hidden_dim, act_layer=mlp_act_layer,
                         drop=mlp_drop_rate, channels_first=channel_first)
-        self.Bnorm2 = nn.BatchNorm2d(hidden_dim)
+        self.Bnorm2 = norm_layer(hidden_dim)
         self.Bmlp = Mlp(in_features=hidden_dim, hidden_features=mlp_hidden_dim, act_layer=mlp_act_layer,
                         drop=mlp_drop_rate, channels_first=channel_first)
 
@@ -807,11 +807,11 @@ class DDB(nn.Module):
     def __init__(self,channel,norm_layer):
         super().__init__()
         self.sub = nn.Sequential(
-            nn.Conv2d(channel, channel, kernel_size=3, padding=1, groups=channel, bias=False),
+            nn.Conv2d(channel, channel, kernel_size=3, padding=1, groups=channel, bias=True),
             norm_layer(channel),
         )
         self.cc = nn.Sequential(
-            nn.Conv2d(channel*2, channel, kernel_size=3, padding=1, groups=channel, bias=False),
+            nn.Conv2d(channel*2, channel, kernel_size=3, padding=1, groups=channel, bias=True),
             norm_layer(channel),
         )
         self.GELU = nn.GELU()

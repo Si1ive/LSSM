@@ -1,6 +1,3 @@
-import sys
-sys.path.append('/mnt/nfs/data/home/1120241486/ZZHNet/')
-
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -12,7 +9,6 @@ import torch.nn.functional as F
 from torchvision import transforms
 import datetime
 import os
-
 import argparse
 import cv2
 
@@ -23,21 +19,17 @@ from net_v5 import ZZHnet
 device = 'cuda'
 path = './dataset'
 
-
 def model_init():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
-    model = ZZHnet.zzh_net(num_class=2)
-    model.load_state_dict(
-        torch.load('/home/zzh/ZZHNet/result/best_checkpoint_' + name + '/best_statedict_epoch76_f_score0.8899.pth'),
-        strict=True)
+    model = ZZHnet.zzh_net(num_classes)
+    model.load_state_dict(torch.load('/home/zzh/ZZHNet/result/best_checkpoint_' +name+ '/best_statedict_epoch82_f_score0.8968.pth'), strict=True)
     model = model.to(device)
     model.eval()
-    return model, device
+    return model,device
 
-
-def test(num_classes, net, files, device, img_size):
+def test(num_classes, net, files, device,img_size):
     trf = transforms.Compose([
         transforms.ToTensor(),
         # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.255])
@@ -69,7 +61,7 @@ def test(num_classes, net, files, device, img_size):
             preds[preds == 1] = 255
             preds = preds.cpu().numpy()
             basename = os.path.basename(masks_path[i])
-            cv2.imwrite('/home/zzh/ZZHNet/result/test_' + name + img + '/' + 'pre_' + basename, preds)
+            cv2.imwrite('/home/zzh/ZZHNet/result/test_' +name+img+ '/' + 'pre_' + basename, preds)
 
             for mask, output in zip(masks, out):
                 metrics.add(mask, output)
@@ -87,12 +79,12 @@ def test(num_classes, net, files, device, img_size):
 if __name__ == '__main__':
     num_classes = 2
     img_size = 1024
-    name = "v4"
-    img = '_1024'
+    name = "v5"
+    img = '_256'
     ##加载模型
     model, device = model_init()
 
-    logger = get_log("/home/zzh/ZZHNet/result/logs/" + str(datetime.date.today()) + 'test_log' + name + img + '.txt')
+    logger = get_log("/home/zzh/ZZHNet/result/logs/" + str(datetime.date.today()) + 'test_log' +name+img+ '.txt')
     test_datapath = '/home/zzh/remote_data/LEVIR-CD/test'
     test_hist = test(num_classes, model, test_datapath, device, img_size)
     logger.info(('precision={}'.format(test_hist["precision"]),
@@ -104,3 +96,7 @@ if __name__ == '__main__':
     history = collections.defaultdict(list)
     for k, v in test_hist.items():
         history["test " + k].append(v)
+
+
+
+
