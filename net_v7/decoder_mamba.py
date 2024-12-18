@@ -6,8 +6,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from net_v6.models.vmamba2 import LayerNorm2d, VSSBlock
-from net_v6.laplace import DoG
+from net_v7.models.vmamba2 import LayerNorm2d, VSSBlock
+from net_v7.laplace import DoG
 
 class conv_small(nn.Module):
     def __init__(self, inchannel,outchannel):
@@ -33,25 +33,11 @@ class AFF(nn.Module):
             nn.Conv2d(dim // 4, dim, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(dim),
         )
-        self.GELU = nn.GELU()
     def forward(self, x1, x2):
-        # #Sigmoid
-        # d = torch.cat((x1, x2), dim=1)
-        # d = self.local_att1(d)
-        # d = torch.sigmoid(d)
-        # d2 = torch.mul(x1, d) + torch.mul(x2, 1.0-d)
-
-        # #tanh
-        # d = torch.cat((x1, x2), dim=1)
-        # d = self.local_att1(d)
-        # d = 1.0 + torch.tanh(d)
-        # d2 = torch.mul(x1, d) + torch.mul(x2, 2.0-d)
-
-        #GeLU
         d = torch.cat((x1, x2), dim=1)
         d = self.local_att1(d)
-        d = self.GELU(d)
-        d2 = torch.mul(x1, d) + torch.mul(x2, -d)
+        d = torch.sigmoid(d)
+        d2 = torch.mul(x1, d) + torch.mul(x2, 1.0-d)
         return d2
 
 class out(nn.Module):
@@ -144,19 +130,19 @@ class decoder(nn.Module):
         self.ABfuse1 = conv_small(dim[3]*2,dim[3])
         self.de_block1 = edge_block(dim[3])
         #当前层输出图像
-        #self.out1 = out(dim[3],num_class)
+        self.out1 = out(dim[3],num_class)
         self.conv1 = conv_small(dim[3],dim[2])
 
         # 编码第二层
         self.ABfuse2 = conv_small(dim[2]*2,dim[2])
         self.de_block2 = edge_block(dim[2])
-        #self.out2 = out(dim[2],num_class)
+        self.out2 = out(dim[2],num_class)
         self.conv2 = conv_small(dim[2],dim[1])
 
         # 编码第三层
         self.ABfuse3 = conv_small(dim[1]*2,dim[1])
         self.de_block3 = edge_block(dim[1])
-        #self.out3 = out(dim[1],num_class)
+        self.out3 = out(dim[1],num_class)
         self.conv3 = conv_small(dim[1],dim[0])
 
         # 编码第四层
@@ -181,7 +167,7 @@ class decoder(nn.Module):
         #执行编码层核心
         c1 = self.de_block1(None, ABfuse1, d4, lap1)
         #输出当前层图像
-        #out1 = self.out1(c1,32)
+        out1 = self.out1(c1,32)
         # 提升一下尺寸
         c1 = self.upsample(c1, 2)
         #降低一下通道
@@ -193,7 +179,7 @@ class decoder(nn.Module):
         ABfuse2 = self.ABfuse2(torch.cat((out3a, out3b),dim=1))
         lap2 = self.downsample(lap, 16)
         c2 = self.de_block2(c1, ABfuse2, d3, lap2)
-        #out2 = self.out2(c2,16)
+        out2 = self.out2(c2,16)
         #out输出当前层，c是继续往后走
         c2 = self.upsample(c2, 2)
         c2 = self.conv2(c2)
@@ -203,7 +189,7 @@ class decoder(nn.Module):
         ABfuse3 = self.ABfuse3(torch.cat((out2a, out2b),dim=1))
         lap3 = self.downsample(lap, 8)
         c3 = self.de_block3(c2, ABfuse3, d2, lap3)
-        #out3= self.out3(c2,8)
+        out3= self.out3(c2,8)
         c3 = self.upsample(c3, 2)
         c3 = self.conv3(c3)
 
@@ -214,5 +200,5 @@ class decoder(nn.Module):
         c4 = self.de_block4(c3, ABfuse4, d1, lap4)
         out4 = self.upsample(c4,4)
 
-        #return out1,out2,out3,out4
-        return out4
+        return out1,out2,out3,out4
+        #return out4

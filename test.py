@@ -14,17 +14,14 @@ import cv2
 
 from logsetting import get_log
 from loss.metrics import Metrics
-from net_v5 import ZZHnet
-
-device = 'cuda'
-path = './dataset'
+from net_v6 import ZZHnet
 
 def model_init():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
     model = ZZHnet.zzh_net(num_classes,dims)
-    model.load_state_dict(torch.load('/home/zzh/Result/ZZHNet/best_checkpoint_' +name+ '/best_statedict_epoch82_f_score0.8968.pth'), strict=True)
+    model.load_state_dict(torch.load('/home/zzh/Result/bestF1/' +name + F1name+ '.pth'), strict=True)
     model = model.to(device)
     model.eval()
     return model,device
@@ -61,7 +58,7 @@ def test(num_classes, net, files, device,img_size):
             preds[preds == 1] = 255
             preds = preds.cpu().numpy()
             basename = os.path.basename(masks_path[i])
-            cv2.imwrite('/home/zzh/Result/ZZHNet/test_' +name+img+ '/' + 'pre_' + basename, preds)
+            cv2.imwrite("/home/zzh/Result/bestF1/" + name +"/test_" + version + "_{}".format(img_size)+"/pre_" + basename, preds)
 
             for mask, output in zip(masks, out):
                 metrics.add(mask, output)
@@ -77,17 +74,32 @@ def test(num_classes, net, files, device,img_size):
 
 
 if __name__ == '__main__':
+    device = 'cuda'
     num_classes = 2
-    img_size = 1024
-    name = "v5"
-    img = '_1024'
+    path = './dataset'
     dims = [64, 128, 256, 512]
+
+    version = "v6"
+    img_size = 256
+    name = '103144-F1_8857_8958/'
+    F1name = 'best_statedict_epoch45_f_score0.8858'
+
     ##加载模型
     model, device = model_init()
 
-    logger = get_log("/home/zzh/Result/ZZHNet/logs/" + str(datetime.date.today()) + 'test_log' +name+img+ '.txt')
-    test_datapath = '/home/zzh/remote_data/LEVIR-CD/test'
+    #创建输出文件夹
+    if not os.path.exists("/home/zzh/Result/bestF1/" + name + "test_" + version + "_" +'{}'.format(img_size)):
+        os.makedirs("/home/zzh/Result/bestF1/" + name + "test_" + version + "_" +'{}'.format(img_size))
+    logger = get_log("/home/zzh/Result/bestF1/"+ name + str(datetime.date.today()) + ' test_log' + version + '_{}.txt'.format(img_size))
+    if img_size == 1024:
+        test_datapath = '/home/zzh/remote_data/LEVIR-CD/test'
+    else :
+        test_datapath = '/home/zzh/remote_data/LEVIR-CD256/test'
+
+    #推理
     test_hist = test(num_classes, model, test_datapath, device, img_size)
+
+    #输出内容
     logger.info(('precision={}'.format(test_hist["precision"]),
                  'recall={}'.format(test_hist["recall"]),
                  'f_score={}'.format(test_hist["f_score"]),

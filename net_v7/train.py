@@ -17,7 +17,7 @@ from tqdm import tqdm
 from data.dataset import Dataset
 from loss.lovasz_loss import lovasz_softmax
 from loss.metrics import Metrics
-from net_v6 import ZZHnet
+from net_v7 import ZZHnet
 
 def model_init():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -64,7 +64,7 @@ def data_init(train_pickle_file, val_pickle_file):
 def train(model, device, data_loader, num_epochs):
     val_acc = []
     train_loss = []
-    base_lr = 0.0008
+    base_lr = 0.00107
     best_F1 = 0
     # 先来个预训练32残差跑边缘增强，跑通，看看得分,速度等等
     # 再用武大的边缘增强单独跑，以及跟残差结合跑，对比结果变化，模型大小，速度变化等等
@@ -91,21 +91,25 @@ def train(model, device, data_loader, num_epochs):
             A = data['A'].cuda().float()
             B = data['B'].cuda()
             Label = (data['label'] > 0).squeeze(1).type(torch.LongTensor).to(device)
-            out = model(A, B)  # 输出的是两通道概率图，criterion中潜入了softmax
+            out1,out2,out3,out = model(A, B)  # 输出的是两通道概率图，criterion中潜入了softmax
 
             optimizer.zero_grad()
+            loss1 = F.binary_cross_entropy_with_logits(out1, Label)
+            loss2 = F.binary_cross_entropy_with_logits(out2, Label)
+            loss3 = F.binary_cross_entropy_with_logits(out3, Label)
             ce_loss_1 = F.cross_entropy(out, Label, ignore_index=255)
             lovasz_loss = lovasz_softmax(F.softmax(out, dim=1), Label, ignore=255)
-            loss = ce_loss_1 + 0.75 * lovasz_loss
+            loss_final = ce_loss_1 + 0.75 * lovasz_loss
+            loss_all = loss_final * 4 + (loss1 + loss2 + loss3)
 
-            writer.add_scalar("Loss/train", loss, iter)
+            writer.add_scalar("Loss/train", loss_final, iter)
             iter += 1
-            loss.backward()
+            loss_all.backward()
             optimizer.step()
             # statistics
-            running_loss_seg += loss.item() * A.size(1)
+            running_loss_seg += loss_final.item() * A.size(1)
             # 更新进度条
-            process_bar.set_postfix(loss=loss.item())
+            process_bar.set_postfix(loss=loss_final.item())
         epoch_loss_seg = running_loss_seg / len(data_loader['train'].dataset)
         print('train | overall_Loss_seg: {:.6f}'.format(epoch_loss_seg))  # edge
         train_loss.append(epoch_loss_seg)
@@ -125,7 +129,7 @@ def train(model, device, data_loader, num_epochs):
                 Label = (data['label'] > 0).squeeze(1).type(torch.LongTensor).to(device)
                 # 黑白图像只有1通道，这样操作label就只剩了 N H W,并且每个点上的值，先转换成了bool，又转换成了0或1
                 # Label = (data['label'] > 0).squeeze(1).type(torch.LongTensor).to(device)
-                out = model(A, B)  # 输出的是两通道概率图，criterion中潜入了softmax
+                out1,out2,out3,out = model(A, B)  # 输出的是两通道概率图，criterion中潜入了softmax
 
                 optimizer.zero_grad()
                 ce_loss_1 = F.cross_entropy(out, Label, ignore_index=255)
@@ -171,14 +175,14 @@ def train(model, device, data_loader, num_epochs):
 if __name__ == '__main__':
     # 超算跟笔记本之间切换要修改的参数:
     # batch,SuperTrain,dims,
-    batch_size = 128
+    batch_size = 12
     img_size = 256
-    num_epochs = 150
+    num_epochs = 100
     num_class = 2
     #dims = [96, 192, 384, 768]
     dims = [64, 128, 256, 512]
     version = 'v6'
-    SuperTrain = True
+    SuperTrain = False
     writer = SummaryWriter()
     model, device = model_init()
     writer.close()
